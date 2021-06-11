@@ -41,7 +41,8 @@ def load_data():
   # write your custom query
   sql = '''
       SELECT *
-      FROM "STREAMLIT_PUBLIC"."TEST"."DUMMY"
+      FROM "STREAMLIT_PUBLIC"."TEST_DATA"."DUMMY"
+      LIMIT 100
   '''
 
   # pull query into dataframe
