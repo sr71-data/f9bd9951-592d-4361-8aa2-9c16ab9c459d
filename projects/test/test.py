@@ -21,8 +21,8 @@ def load_data():
   ACCOUNT = os.getenv('SNOWFLAKE_ACCOUNT')
   USERNAME = os.getenv('SNOWFLAKE_USERNAME')
   PASSWORD = os.getenv('SNOWFLAKE_PASSWORD')
-  WAREHOUSE = 'PROD_WH'
-  ROLE = 'PROD_ROLE'
+  WAREHOUSE = 'STREAMLIT_PUBLIC_WH'
+  ROLE = 'STREAMLIT_PUBLIC_ROLE'
 
   # creating the sqlalchemy engine
   engine = create_engine(URL(
