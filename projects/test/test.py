@@ -9,10 +9,8 @@ registry.register('snowflake', 'snowflake.sqlalchemy', 'dialect')
 import plotly.express as px
 import plotly.graph_objects as go
 from datetime import datetime, timedelta
-import math
-from scipy.optimize import curve_fit
-from sklearn.metrics import r2_score
-from sklearn.metrics import mean_absolute_error
+
+
 
 ## FUNCTIONS
 @st.cache(suppress_st_warning = True, show_spinner = False)
