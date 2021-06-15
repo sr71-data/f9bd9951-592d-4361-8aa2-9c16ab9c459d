@@ -18,11 +18,11 @@ def load_data():
   st.write('No cache found! Attempt data load ...')
 
  # Loading Env Variable for logging into snowflake
-  ACCOUNT = 'tj87137.ap-southeast-2'
-  USERNAME = 'STREAMLIT_PUBLIC_USER'
-  PASSWORD = 'pJVgRvfi0BlSQoo9r0Cc'
-  WAREHOUSE = 'STREAMLIT_PUBLIC_WH'
-  ROLE = 'STREAMLIT_PUBLIC_ROLE'
+  ACCOUNT = os.getenv('SNOWFLAKE_ACCOUNT')
+  USERNAME = os.getenv('SNOWFLAKE_USERNAME')
+  PASSWORD = os.getenv('SNOWFLAKE_PASSWORD')
+  WAREHOUSE = 'PROD_WH'
+  ROLE = 'PROD_ROLE'
 
   # creating the sqlalchemy engine
   engine = create_engine(URL(
