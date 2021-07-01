@@ -223,7 +223,7 @@ trace2 = go.Scatter(
 fig2 = go.Figure(data = trace2)
 
 fig2.update_layout(
-    title="Top 20 Rated Programs",
+    title="Top 10 Rated Programs",
     xaxis_title='Expensiveness (CPU weighted)',
     yaxis_title='Freshness (UPM)'
     )
