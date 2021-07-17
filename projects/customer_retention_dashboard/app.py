@@ -9,13 +9,9 @@ from sqlalchemy.dialects import registry
 registry.register('snowflake', 'snowflake.sqlalchemy', 'dialect')
 import plotly.express as px
 import plotly.graph_objects as go
-import plotly.figure_factory as ff
 import datetime
-import seaborn as sns
 import math
-import matplotlib.pyplot as plt
-from scipy import stats
-from sklearn.neighbors import KernelDensity
+
 
 ## set app page config
 st.set_page_config(page_title = 'customer retention',
@@ -173,7 +169,7 @@ def overallRepurchaseRateComponent(customer_order_filtered):
 def productFilter(repurchases):
   product_selection = st.sidebar.selectbox(label = 'Which product to include?',
                       options = ['all', 'mattress', 'accessory'],
-                      key = 'section-3_select_box')
+                      key = 'section-2_select_box')
 
   if product_selection == 'mattress': 
     repurchases = repurchases[repurchases['has_mattress'] == True]
@@ -246,15 +242,66 @@ def purchaseDelayDistributionComponent(repurchases, selected_month, included_dat
 
   # st.write('debug', selected_month)
   
+def section3DateFilter(customer_order):
+  start_date = st.sidebar.date_input(
+          label = 'Start Date',
+          value = datetime.date(2019, 1, 1),
+          key = 'section-3_start_date')
+
+  end_date = st.sidebar.date_input(
+        label = 'End Date',
+        key = 'section-3_date_end')
+
+  # applying date filter
+  customer_order_filtered = customer_order[(customer_order['created_at_tz'].dt.date >= start_date)
+    & (customer_order['created_at_tz'].dt.date <= end_date)]
+  
+  return customer_order_filtered
+
+def section3FilterProduct(customer_order_filtered):
+  product_selection = st.sidebar.selectbox(label = 'Which product to include?',
+                        options = ['all', 'mattress', 'accessory'],
+                        key = 'section-3_select_box')
+
+  if product_selection == 'mattress': 
+    customer_order_filtered = customer_order_filtered[customer_order_filtered['has_mattress'] == True]
+  elif product_selection == 'accessory':
+    customer_order_filtered = customer_order_filtered[customer_order_filtered['has_accessory'] == True]
+
+  return customer_order_filtered
+
+def nthOrderComponent(customer_order_filtered):
+  purchase_sequence = customer_order_filtered[['purchase_sequence', 'order_id']].groupby('purchase_sequence') \
+    .nunique() \
+      .reset_index() \
+        .rename(columns = {'purchase_sequence': 'nth order',
+          'order_id': 'order_count'})
+
+  total_orders = customer_order_filtered['order_id'].nunique()
+
+  purchase_sequence['% of all orders'] = np.round((purchase_sequence['order_count'] / total_orders) * 100, 2)
+  purchase_sequence = purchase_sequence[purchase_sequence['nth order'] > 1]
+
+
+
+  fig = px.bar(purchase_sequence,
+    x = 'nth order',
+    y = '% of all orders')
+
+  st.plotly_chart(fig)
+  st.write('All orders: ', total_orders)
 
 ## MAIN
 st.title('Customer Retention Dashboard')
 customer_order = loadCustomerOrder().copy()
 
-# SECTION 1 #########################################################
+# Global Filters ####################################################
 st.sidebar.header('Global Filter')
-customer_order = removeShortTermRepurchaseFilter(customer_order)
+# note: this filter just turns off the is_purchase boolean for short term repurchase. 
+# does not delete the row of data. Therefore total order count will still be accurate.
+customer_order = removeShortTermRepurchaseFilter(customer_order) 
 
+# SECTION 1 #########################################################
 st.sidebar.header('Section 1 - Filters')
 customer_order_filtered = dateFilterComponent(customer_order)
 
@@ -281,9 +328,18 @@ purchaseDelayDistributionComponent(repurchases, selected_month, included_dataset
 
 # SECTION 3 #########################################################
 st.title('Section 3')
-st.subheader('')
+st.subheader('How often do repeat purchases gets to the Nth purchase?')
+st.warning('''Note: All order here refers to all orders that contains the relevant product type. 
+  Denominator can change depending on the product filter used. 
+''')
 
+st.sidebar.header('Section 3 - Filters')
 
+# filters
+customer_order_filtered = section3DateFilter(customer_order)
+customer_order_filtered = section3FilterProduct(customer_order_filtered)
+
+nthOrderComponent(customer_order_filtered)
 
 
 
