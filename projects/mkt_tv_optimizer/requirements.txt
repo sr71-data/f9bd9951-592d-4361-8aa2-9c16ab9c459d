@@ -4,3 +4,4 @@ snowflake-connector-python==2.4.4
 snowflake-sqlalchemy==1.2.4
 SQLAlchemy==1.4.18
 streamlit==0.82.0
+pyarrow==3.0.0
