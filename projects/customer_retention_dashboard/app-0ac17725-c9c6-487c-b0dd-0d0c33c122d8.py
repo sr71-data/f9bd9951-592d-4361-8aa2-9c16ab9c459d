@@ -25,6 +25,9 @@ PASSWORD = os.getenv('SNOWFLAKE_PASSWORD')
 WAREHOUSE = 'STREAMLIT_PUBLIC_WH'
 ROLE = 'STREAMLIT_PUBLIC_ROLE'
 
+st.write('debug', USERNAME)
+st.write('debug', PASSWORD)
+
 ## Utility Functions
 @st.cache(suppress_st_warning = True, show_spinner = False)
 def loadData(sql):
