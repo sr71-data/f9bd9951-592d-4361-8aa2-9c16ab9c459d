@@ -14,20 +14,23 @@ import math
 
 
 ## set app page config
-# st.set_page_config(page_title = 'customer retention',
-#   layout = 'wide')
+st.set_page_config(page_title = 'customer retention',
+  layout = 'wide')
 
 ## data connection credentials
 # Loading Env Variable for logging into snowflake
-ACCOUNT = os.getenv('SNOWFLAKE_ACCOUNT')
-USERNAME = os.getenv('SNOWFLAKE_USERNAME')
-PASSWORD = os.getenv('SNOWFLAKE_PASSWORD')
+# ACCOUNT = os.getenv('SNOWFLAKE_ACCOUNT')
+# USERNAME = os.getenv('SNOWFLAKE_USERNAME')
+# PASSWORD = os.getenv('SNOWFLAKE_PASSWORD')
+
+ACCOUNT = st.secrets['SNOWFLAKE_ACCOUNT']
+USERNAME = st.secrets['SNOWFLAKE_USERNAME']
+PASSWORD = st.secrets['SNOWFLAKE_PASSWORD']
+
 WAREHOUSE = 'STREAMLIT_PUBLIC_WH'
 ROLE = 'STREAMLIT_PUBLIC_ROLE'
 
-# st.write('debug', USERNAME)
-# st.write('debug', PASSWORD)
-# st.write('debug', WAREHOUSE)
+
 
 ## Utility Functions
 @st.cache(suppress_st_warning = True, show_spinner = False)
