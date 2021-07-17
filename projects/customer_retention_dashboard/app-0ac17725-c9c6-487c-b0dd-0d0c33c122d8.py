@@ -14,8 +14,8 @@ import math
 
 
 ## set app page config
-st.set_page_config(page_title = 'customer retention',
-  layout = 'wide')
+# st.set_page_config(page_title = 'customer retention',
+#   layout = 'wide')
 
 ## data connection credentials
 # Loading Env Variable for logging into snowflake
