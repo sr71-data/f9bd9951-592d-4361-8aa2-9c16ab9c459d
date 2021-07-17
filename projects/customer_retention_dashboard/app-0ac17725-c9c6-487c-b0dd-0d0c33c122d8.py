@@ -22,8 +22,8 @@ st.set_page_config(page_title = 'customer retention',
 ACCOUNT = os.getenv('SNOWFLAKE_ACCOUNT')
 USERNAME = os.getenv('SNOWFLAKE_USERNAME')
 PASSWORD = os.getenv('SNOWFLAKE_PASSWORD')
-WAREHOUSE = 'PROD_WH'
-ROLE = 'PROD_ROLE'
+WAREHOUSE = 'STREAMLIT_PUBLIC_WH'
+ROLE = 'STREAMLIT_PUBLIC_ROLE'
 
 ## Utility Functions
 @st.cache(suppress_st_warning = True, show_spinner = False)
