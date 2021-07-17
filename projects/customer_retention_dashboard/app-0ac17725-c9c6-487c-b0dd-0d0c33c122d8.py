@@ -27,6 +27,7 @@ ROLE = 'STREAMLIT_PUBLIC_ROLE'
 
 st.write('debug', USERNAME)
 st.write('debug', PASSWORD)
+st.write('debug', WAREHOUSE)
 
 ## Utility Functions
 @st.cache(suppress_st_warning = True, show_spinner = False)
