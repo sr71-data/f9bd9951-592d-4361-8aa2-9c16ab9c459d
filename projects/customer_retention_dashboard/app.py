@@ -1,3 +1,4 @@
+from plotly.tools import make_subplots
 import streamlit as st
 import numpy as np
 import pandas as pd
@@ -14,6 +15,7 @@ import seaborn as sns
 import math
 import matplotlib.pyplot as plt
 from scipy import stats
+from sklearn.neighbors import KernelDensity
 
 ## set app page config
 st.set_page_config(page_title = 'customer retention',
@@ -57,6 +59,7 @@ def loadData(sql):
 ## Core Functions
 @st.cache(suppress_st_warning = True, show_spinner = False)
 def loadCustomerOrder():
+
   sql = '''
     SELECT *
     FROM "STREAMLIT_PUBLIC"."CUSTOMER_RETENTION"."CUSTOMER_ORDER"
@@ -68,6 +71,16 @@ def loadCustomerOrder():
   customer_order['previous_created_at_tz'] = pd.to_datetime(customer_order['previous_created_at_tz'])
   customer_order['year_month'] = customer_order['created_at_tz'].dt.strftime('%Y-%m')
   
+  return customer_order
+
+def removeShortTermRepurchaseFilter(customer_order):
+  to_remove = st.sidebar.radio(label = 'Remove short term repurchase? (<2week)',
+    options = [False, True],
+    key = 'remove_short_term_key')
+
+  if to_remove == True:
+    customer_order.loc[customer_order['week_delay'] < 2, 'is_repurchase'] = False
+
   return customer_order
 
 def dateFilterComponent(customer_order):
@@ -161,6 +174,8 @@ customer_order = loadCustomerOrder().copy()
 
 # filters #########################################################
 st.sidebar.header('Filters')
+customer_order = removeShortTermRepurchaseFilter(customer_order)
+
 st.sidebar.subheader('Date Range')
 customer_order_filtered = dateFilterComponent(customer_order)
 
@@ -174,11 +189,52 @@ overallRepurchaseRateComponent(customer_order_filtered)
 st.title('under development')
 
 # Repurchase distribution component
-# repurchases 
+repurchases = customer_order[customer_order['is_repurchase'] == True]
+
+# filter for date and mattress / accessory filtering
+month_selector = st.selectbox(label = 'select year-month',
+  options = repurchases['year_month'].sort_values(ascending = False).unique().tolist(),
+  key = 'year_month_selector')
+
+# baseline = repurchases[repurchases[]]
+baseline = repurchases[repurchases['year_month'].isin(['2021-01', 
+                                                        '2021-02', 
+                                                        '2021-03', 
+                                                        '2021-04', 
+                                                        '2021-05'])]                     
+baseline['group'] = 'baseline'
+
+# lightning = repurchases[(repurchases['created_at_tz'] >= '2021-06-1')
+#   & (repurchases['created_at_tz'] < '2021-07-01')][['week_delay']]
+lightning = repurchases[repurchases['year_month'] == '2021-06']
+lightning['group'] = 'lightning'
+
+fig = go.Figure()
+fig.add_trace(go.Histogram(x = baseline['week_delay'], 
+                            histnorm='percent',
+                            nbinsx = 60))
+fig.add_trace(go.Histogram(x = lightning['week_delay'], 
+                            histnorm='percent',
+                            nbinsx = 60))
+fig.update_layout(barmode='overlay')
+fig.update_traces(opacity=0.6)
+
+st.plotly_chart(fig)
+
+st.write(baseline.head())
+
+
+# px.histogram(lightning,
+#     x = 'week_delay',
+#     histnorm = 'percent',
+#     opacity = 0.8,
+#     marginal = 'rug',
+#     nbins = 60),
+#   row = 1,
+#   col = 1)
 
 
 # nth repeat purchase component.
-
 
 
 
