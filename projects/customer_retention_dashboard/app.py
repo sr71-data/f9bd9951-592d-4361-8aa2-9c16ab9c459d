@@ -144,6 +144,8 @@ def monthlyRepurchaseRateComponent(customer_order_filtered):
     x = 'year_month', 
     y = ['all repurchase %', 'mattress repurchase %', 'accessorry repurchase %'])
 
+  fig.update_xaxes(title_text='Year and month')
+  fig.update_yaxes(title_text='% repurchases (repeat / total order)')
   st.plotly_chart(fig)
 
 def overallRepurchaseRateComponent(customer_order_filtered):
@@ -168,75 +170,118 @@ def overallRepurchaseRateComponent(customer_order_filtered):
   st.write('Repeats (mattress): ', repeats_mattress_percent, '%')
   st.write('Repeats (accessory): ', repeats_accessory_percent, '%')
 
+def productFilter(repurchases):
+  product_selection = st.sidebar.selectbox(label = 'Which product to include?',
+                      options = ['all', 'mattress', 'accessory'],
+                      key = 'section-3_select_box')
+
+  if product_selection == 'mattress': 
+    repurchases = repurchases[repurchases['has_mattress'] == True]
+  elif product_selection == 'accessory':
+    repurchases = repurchases[repurchases['has_accessory'] == True]
+
+  return repurchases
+
+def includedDatasetFilter():
+  included_dataset = st.sidebar.multiselect(label = 'Which data set to include?', 
+    options = ['Baseline', 'Lightning', 'Selected Month'],
+    default = ['Baseline', 'Lightning', 'Selected Month'],
+    key = 'section3-multi-select')
+  return included_dataset
+
+def monthSelectorFilter(repurchases):
+  month_selector = st.sidebar.selectbox(label = 'select year-month',
+    options = repurchases['year_month'].sort_values(ascending = False).unique().tolist(),
+    key = 'section-2_year_month_selector')
+  
+  selected_month = repurchases[repurchases['year_month'] == month_selector]
+  return selected_month
+
+def purchaseDelayDistributionComponent(repurchases, selected_month, included_dataset):
+  baseline = repurchases[repurchases['year_month'].isin(['2021-01', 
+                                                          '2021-02', 
+                                                          '2021-03', 
+                                                          '2021-04', 
+                                                          '2021-05'])]                     
+
+  lightning = repurchases[repurchases['year_month'] == '2021-06']
+
+  # Create distribution plot
+  fig = go.Figure()
+
+  if 'Baseline' in included_dataset:
+    bin_width = 10
+    nbinsx = math.ceil((baseline['week_delay'].max() - baseline['week_delay'].min()) / bin_width)
+    
+    fig.add_trace(go.Histogram(x = baseline['week_delay'], 
+                                histnorm='percent',
+                                marker = {'color': '#2ab7ca'},
+                                nbinsx = nbinsx,
+                                name = 'Baseline (Jan - May, 21)'))
+
+  if 'Lightning' in included_dataset:     
+    bin_width = 10
+    nbinsx = math.ceil((lightning['week_delay'].max() - lightning['week_delay'].min()) / bin_width)                         
+    fig.add_trace(go.Histogram(x = lightning['week_delay'], 
+                                histnorm='percent',
+                                marker = {'color': '#fed766'},
+                                nbinsx = nbinsx,
+                                name = 'Lightning Sale (June, 21)'))
+
+  if 'Selected Month' in included_dataset:       
+    bin_width = 10
+    nbinsx = math.ceil((selected_month['week_delay'].max() - selected_month['week_delay'].min()) / bin_width)
+
+    fig.add_trace(go.Histogram(x = selected_month['week_delay'], 
+                                histnorm='percent',
+                                marker = {'color': '#fe4a49'},
+                                nbinsx = nbinsx,
+                                name = 'Selected month'))
+
+  fig.update_layout(barmode='overlay')
+  fig.update_traces(opacity=0.6)
+  fig.update_xaxes(title_text='Delay in weeks')
+  fig.update_yaxes(title_text='% of all repurchases')
+  st.plotly_chart(fig)
+
+  # st.write('debug', selected_month)
+  
+
 ## MAIN
 st.title('Customer Retention Dashboard')
 customer_order = loadCustomerOrder().copy()
 
-# filters #########################################################
-st.sidebar.header('Filters')
+# SECTION 1 #########################################################
+st.sidebar.header('Global Filter')
 customer_order = removeShortTermRepurchaseFilter(customer_order)
 
-st.sidebar.subheader('Date Range')
+st.sidebar.header('Section 1 - Filters')
 customer_order_filtered = dateFilterComponent(customer_order)
 
-# Main Components ###################################
-st.subheader('How many percent of orders every month are repeat purchases?')
+st.title('Section 1')
+st.subheader('How many % of orders every month are from repeat purchases?')
+st.warning('Note: Metrics here are displayed as a % of the total sales (denominator).')
 monthlyRepurchaseRateComponent(customer_order_filtered)
-
-st.subheader('What is the overall % of repeat purchase in the time frame selected?')
 overallRepurchaseRateComponent(customer_order_filtered)
 
-st.title('under development')
-
-# Repurchase distribution component
+# SECTION 2 #########################################################
+st.title('Section 2')
+st.subheader('What is the usual time delay between the repeat purchases?')
+st.warning('Note: Metric here are displayed as a % of the count of REPEAT orders (denominator).')
 repurchases = customer_order[customer_order['is_repurchase'] == True]
 
-# filter for date and mattress / accessory filtering
-month_selector = st.selectbox(label = 'select year-month',
-  options = repurchases['year_month'].sort_values(ascending = False).unique().tolist(),
-  key = 'year_month_selector')
+# Filters
+st.sidebar.header('Section 2 - Filters')
+repurchases = productFilter(repurchases)
+included_dataset = includedDatasetFilter()
+selected_month = monthSelectorFilter(repurchases)
 
-# baseline = repurchases[repurchases[]]
-baseline = repurchases[repurchases['year_month'].isin(['2021-01', 
-                                                        '2021-02', 
-                                                        '2021-03', 
-                                                        '2021-04', 
-                                                        '2021-05'])]                     
-baseline['group'] = 'baseline'
+# Distribution component
+purchaseDelayDistributionComponent(repurchases, selected_month, included_dataset)
 
-# lightning = repurchases[(repurchases['created_at_tz'] >= '2021-06-1')
-#   & (repurchases['created_at_tz'] < '2021-07-01')][['week_delay']]
-lightning = repurchases[repurchases['year_month'] == '2021-06']
-lightning['group'] = 'lightning'
-
-fig = go.Figure()
-fig.add_trace(go.Histogram(x = baseline['week_delay'], 
-                            histnorm='percent',
-                            nbinsx = 60))
-fig.add_trace(go.Histogram(x = lightning['week_delay'], 
-                            histnorm='percent',
-                            nbinsx = 60))
-fig.update_layout(barmode='overlay')
-fig.update_traces(opacity=0.6)
-
-st.plotly_chart(fig)
-
-st.write(baseline.head())
-
-
-# px.histogram(lightning,
-#     x = 'week_delay',
-#     histnorm = 'percent',
-#     opacity = 0.8,
-#     marginal = 'rug',
-#     nbins = 60),
-#   row = 1,
-#   col = 1)
-
-
-# nth repeat purchase component.
-
-
+# SECTION 3 #########################################################
+st.title('Section 3')
+st.subheader('')
 
 
 
